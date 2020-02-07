@@ -177,12 +177,14 @@ class PongDuel(gym.Env):
             self.__update_agent_view(agent_i)
 
     def __update_ball_pos(self):
-
+        hit = [0 for _ in range(self.n_agents)]
+        hit_reward = 10
         if self.ball_pos[0] <= 1:
             self.curr_ball_dir = 'SE' if self.curr_ball_dir == 'NE' else 'SW'
         elif self.ball_pos[0] >= (self._grid_shape[0] - 2):
             self.curr_ball_dir = 'NE' if self.curr_ball_dir == 'SE' else 'NW'
         elif PRE_IDS['agent'] in self._full_obs[self.ball_pos[0]][self.ball_pos[1] + 1]:
+            hit[1] = hit_reward
             edge = int(self._full_obs[self.ball_pos[0]][self.ball_pos[1] + 1].split('_')[1])
             _dir = ['NW', 'W', 'SW']
             if edge <= 0:
@@ -197,6 +199,7 @@ class PongDuel(gym.Env):
 
             self.curr_ball_dir = np.random.choice(_dir, p=_p)
         elif PRE_IDS['agent'] in self._full_obs[self.ball_pos[0]][self.ball_pos[1] - 1]:
+            hit[0] = hit_reward
             _dir = ['NE', 'E', 'SE']
             edge = int(self._full_obs[self.ball_pos[0]][self.ball_pos[1] - 1].split('_')[1])
             if edge <= 0:
@@ -224,6 +227,7 @@ class PongDuel(gym.Env):
             new_ball_pos = self.ball_pos[0] + 1, self.ball_pos[1] - 1
 
         self.ball_pos = new_ball_pos
+        return hit
 
     def step(self, action_n):
         assert len(action_n) == self.n_agents
@@ -233,12 +237,16 @@ class PongDuel(gym.Env):
         # if ball is beyond paddle, initiate a new round
         if self.ball_pos[1] < 1:
             #rewards = [0, self.reward]
-            rewards = [-self.reward, self.reward]
+            #rewards = [-self.reward, self.reward]
+            rewards = [-self.reward, 0]
             self.__rounds += 1
         elif self.ball_pos[1] >= (self._grid_shape[1] - 1):
             #rewards = [self.reward, 0]
-            rewards = [self.reward, -self.reward]
+            #rewards = [self.reward, -self.reward]
+            reward = [0, -self.reward]
             self.__rounds += 1
+
+        hit = [0 for _ in range(self.n_agents)]
 
         if self.__rounds > self._max_rounds:
             self._agent_dones = [True for _ in range(self.n_agents)]
@@ -250,7 +258,10 @@ class PongDuel(gym.Env):
             if (self.ball_pos[1] < 1) or (self.ball_pos[1] >= self._grid_shape[1] - 1):
                 self.__init_ball_pos()
             else:
-                self.__update_ball_pos()
+                hit = self.__update_ball_pos()
+
+        for _ in range(self.n_agents):
+            rewards[_] += hit[_]
 
         for i in range(self.n_agents):
             self._total_episode_reward[i] += rewards[i]

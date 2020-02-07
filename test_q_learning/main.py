@@ -43,7 +43,7 @@ def get_obs_tuples(obs):
 
 if __name__ == '__main__':
     env_name = "PongDuel-v0"
-    num_episodes = 10000
+    num_episodes = 100000
     num_steps = 1000
 
     agent_args = {
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     env = gym.make(env_name)
     agent_0 = QAgent(**agent_args)
-    #agent_1 = QAgent(**agent_args)
+    agent_1 = QAgent(**agent_args)
 
     for e in range(num_episodes):
         cumulative_reward = 0
@@ -70,10 +70,10 @@ if __name__ == '__main__':
         for _ in range(num_steps):
             state_0, state_1 = get_obs_tuples(obs)
             a_0_y, b_0_y, b_0_x, d_0, e_0_y, = state_0[0], state_0[1], state_0[2], state_0[3], state_0[4]
-            #a_1_y, b_1_y, b_1_x, d_1, e_1_y, = state_1[0], state_1[1], state_1[2], state_1[3], state_1[4]
+            a_1_y, b_1_y, b_1_x, d_1, e_1_y, = state_1[0], state_1[1], state_1[2], state_1[3], state_1[4]
             action_0 = agent_0.get_action_eps_greedy(a_0_y, b_0_y, b_0_x, d_0, e_0_y)
-            #action_1 = agent_1.get_action_eps_greedy(a_1_y, b_1_y, b_1_x, d_1, e_1_y)
-            action_1 = env.action_space.sample()[1]
+            action_1 = agent_1.get_action_eps_greedy(a_1_y, b_1_y, b_1_x, d_1, e_1_y)
+            #action_1 = env.action_space.sample()[1]
             action = []
             action.append(action_0)
             action.append(action_1)
@@ -82,12 +82,12 @@ if __name__ == '__main__':
             new_state_0, new_state_1 = get_obs_tuples(obs)
 
             agent_0.update_Q(state_0, action_0, reward[0], new_state_0)
-            #agent_1.update_Q(state_1, action_1, reward[1], new_state_1)
+            agent_1.update_Q(state_1, action_1, reward[1], new_state_1)
             cumulative_reward += reward[0]
             cumulative_reward += reward[1]
             if all(done):
                 break
-        print('Episode: {:03d} - Cumulative reward this episode: {}'.format(e, cumulative_reward))
+        print('Episode: {:07d} - Cumulative reward this episode: {}'.format(e, cumulative_reward))
 
     input('End of training. \n\nPress `ENTER` to start testing.')
 
@@ -98,9 +98,9 @@ if __name__ == '__main__':
         env.render()
         state_0, state_1 = get_obs_tuples(obs)
         a_0_y, b_0_y, b_0_x, d_0, e_0_y, = state_0[0], state_0[1], state_0[2], state_0[3], state_0[4]
-        #a_1_y, b_1_y, b_1_x, d_1, e_1_y, = state_1[0], state_1[1], state_1[2], state_1[3], state_1[4]
+        a_1_y, b_1_y, b_1_x, d_1, e_1_y, = state_1[0], state_1[1], state_1[2], state_1[3], state_1[4]
         action_0 = agent_0.get_action_greedy(a_0_y, b_0_y, b_0_x, d_0, e_0_y)
-        #action_1 = agent_1.get_action_greedy(a_1_y, b_1_y, b_1_x, d_1, e_1_y)
+        action_1 = agent_1.get_action_greedy(a_1_y, b_1_y, b_1_x, d_1, e_1_y)
         action_1 = env.action_space.sample()[1]
         action = []
         action.append(action_0)
