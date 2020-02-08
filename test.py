@@ -40,7 +40,10 @@ class Tester():
                                  "wins": 0}}
             self._env = gym.make(self._env_name)
             if self._video:
-                output_directory = "recordings/{}".format(model_id)
+                if type(model_id) is list:
+                    output_directory = "recordings/{}_VS_{}".format(model_id[0], model_id[1])
+                else:
+                    output_directory = "recordings/{}".format(model_id)
                 self._env = Monitor(self._env, directory=output_directory, video_callable=lambda episode_id: True, force=True)
             obs_n = self._env.reset()
 
@@ -67,7 +70,8 @@ class Tester():
                     score["agent_1"]["wins"] += reward_n[1]
                     if self._log_on_win == True:
                         self.log_score(_, score, "win")
-                models_score_summary[model_id] = score
+                if type(model_id) != list:
+                    models_score_summary[model_id] = score
                 if _ % self._log_after_steps == 0:
                     self.log_score(_, score)
 
@@ -97,6 +101,7 @@ class Tester():
 if __name__ == "__main__":
     models = ["comp_0{}".format(i) for i in range(1, 5)]
     models.extend(["coop_0{}".format(i) for i in range(1, 5)])
-    # tester = Tester(models=["05"])
+    #models = ["05"]
+    #models = [["comp_01", "coop_03"]]
     tester = Tester(models=models)
     tester.run_tests()

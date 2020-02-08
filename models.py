@@ -97,15 +97,18 @@ class AutoLoadModel(Model):
     def __init__(self, model_id):
         # model_id must be a string with 2 numbers,
         # like "00", "01", etc.
+        # or a list of 2 strings
+        self._agent_type = []
+        self._agents = {}
         self._n_agents = 2
-        self._agent_type = registered_models["all"][model_id]["agent"]
-        getattr(importlib.import_module("agents"), self._agent_type)
-        self._agents = {
+        if type(model_id) != list:
+            model_id = [model_id for _ in range(self._n_agents)]
+        for i, m in enumerate(model_id):
+            self._agent_type.append(registered_models["all"][m]["agent"])
+            agent_class = getattr(importlib.import_module("agents"), self._agent_type[-1])
             # NB: without the 2 () at the end we wouldn't create an obj,
             # but a reference to the class
-            ("agent_{}".format(i)): getattr(importlib.import_module("agents"), self._agent_type)()
-            for i in range(self._n_agents)
-        }
+            self._agents["agent_{}".format(i)] = agent_class()
 
     def get_agents(self):
         return self._agents
@@ -129,6 +132,6 @@ class AutoLoadModel(Model):
 # module level test
 if __name__ == '__main__':
     print("test")
-    model = AutoLoadModel("02")
+    model = AutoLoadModel(["comp_01", "comp_02"])
     print(model._agents)
     print("endtest")
