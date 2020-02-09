@@ -41,9 +41,8 @@ class Tester():
             self._env = gym.make(self._env_name)
             if self._video:
                 if type(model_id) is list:
-                    output_directory = "recordings/{}_VS_{}".format(model_id[0], model_id[1])
-                else:
-                    output_directory = "recordings/{}".format(model_id)
+                    model_id = "{}_VS_{}".format(model_id[0], model_id[1])
+                output_directory = "recordings/{}".format(model_id)
                 self._env = Monitor(self._env, directory=output_directory, video_callable=lambda episode_id: True, force=True)
             obs_n = self._env.reset()
 
@@ -70,8 +69,7 @@ class Tester():
                     score["agent_1"]["wins"] += reward_n[1]
                     if self._log_on_win == True:
                         self.log_score(_, score, "win")
-                if type(model_id) != list:
-                    models_score_summary[model_id] = score
+                models_score_summary[model_id] = score
                 if _ % self._log_after_steps == 0:
                     self.log_score(_, score)
 
@@ -98,10 +96,41 @@ class Tester():
             print("")
 
 
-if __name__ == "__main__":
+def simple_model_list():
     models = ["comp_0{}".format(i) for i in range(1, 5)]
     models.extend(["coop_0{}".format(i) for i in range(1, 5)])
-    #models = ["05"]
-    #models = [["comp_01", "coop_03"]]
+    return models
+
+
+def all_comp_vs_coop_model_list():
+    models = []
+    for i in range(1, 5):
+        for j in range(1, 5):
+            models.append(["comp_0{}".format(i), "coop_0{}".format(j)])
+    return models
+
+
+def all_vs_model_list_type(m_type):
+    if m_type not in ["comp", "coop"]:
+        raise ValueError("m_type must be either \'comp\' or \'coop\'")
+    models = []
+    for i in range(1, 5):
+        for j in range(1, 5):
+            if j > i:
+                models.append(["{}_0{}".format(m_type, i), "{}_0{}".format(m_type, j)])
+    return models
+
+
+def all_vs_model_list():
+    models = []
+    for m_type in ["comp", "coop"]:
+        models.extend(all_vs_model_list_type(m_type))
+    return models
+
+
+if __name__ == "__main__":
+    #models = simple_model_list()
+    #models = all_comp_vs_coop_model_list()
+    models = all_vs_model_list()
     tester = Tester(models=models)
     tester.run_tests()
